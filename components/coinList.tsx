@@ -1,21 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { View, SafeAreaView, FlatList, RefreshControl, TextInput } from 'react-native'
+import { View, SafeAreaView, RefreshControl, TextInput } from 'react-native'
+import { FlashList } from '@shopify/flash-list'
+
 import { useLazyGetCoinListQuery, useLazyGetQuotesQuery } from '@/store/reducers/api'
 import { useDispatch, useSelector } from 'react-redux'
 import { coinsListSelector, coinsSizeSelector, reset } from '@/store/reducers/coinList'
-import { isEmpty, map } from 'lodash/fp'
+import { isEmpty, map, size } from 'lodash/fp'
 import { debounce } from 'lodash'
 import ItemCoin from './coinItem'
 import { Color } from '@/constants/color'
 
 const Layout = () => {
-  const [getData, { isFetching }] = useLazyGetCoinListQuery()
+  const [getData, { data, isFetching }] = useLazyGetCoinListQuery()
   const [viewItems, updateViewItems] = useState<string[]>([])
   const [getQuote] = useLazyGetQuotesQuery()
   const dispatch = useDispatch()
   const coinSize = useSelector(coinsSizeSelector)
   const [textSearch, updateTextSearch] = useState<string>('')
-  const coinsList = useSelector(coinsListSelector(textSearch))
+  const coinsList: string[] = useSelector(coinsListSelector(textSearch))
   const updateView = useCallback(
     debounce(({ viewableItems }) => {
       const item = map(({ item }) => item)(viewableItems)
@@ -38,10 +40,11 @@ const Layout = () => {
       style={{
         flex: 1,
         padding: 18,
-        backgroundColor: Color.background
+        backgroundColor: Color.background,
+        flexGrow: 1
       }}
     >
-      <SafeAreaView>
+      <SafeAreaView style={{ flex: 1 }}>
         <TextInput
           inlineImageLeft='search'
           value={textSearch}
@@ -56,24 +59,26 @@ const Layout = () => {
           }}
           clearButtonMode='while-editing'
         />
-        <FlatList
-          initialNumToRender={30}
+        <FlashList
           onViewableItemsChanged={updateView}
           data={coinsList}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => <ItemCoin coinId={item} />}
+          estimatedItemSize={data?.status.total_count || 200}
+          renderItem={({ item }) => <ItemCoin key={item} coinId={item} />}
           onEndReached={() => {
             if (!isEmpty(textSearch)) {
               return
             }
             getData({ start: coinSize + 1, limit: 30 })
           }}
-          onEndReachedThreshold={0.3}
+          onEndReachedThreshold={0.4}
           refreshControl={
             <RefreshControl
               refreshing={isFetching}
               onRefresh={() => {
                 if (!isEmpty(textSearch)) {
+                  return
+                }
+                if (data?.status.total_count && size(coinsList) >= data?.status.total_count) {
                   return
                 }
                 dispatch(reset())
