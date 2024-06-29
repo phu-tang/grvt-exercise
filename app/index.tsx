@@ -1,27 +1,34 @@
 import React, { useEffect, useState } from 'react'
 import { View, SafeAreaView, Text, FlatList, RefreshControl, TextInput } from 'react-native'
-import { useLazyGetCoinListQuery } from '@/store/reducers/api'
+import { useLazyGetCoinListQuery, useGetQuotesQuery } from '@/store/reducers/api'
 import { useDispatch, useSelector } from 'react-redux'
 import { coinsListSelector, coinsSizeSelector, getCoinInfoByKey, reset } from '@/store/reducers/coinList'
-import { isEmpty } from 'lodash'
+import { isEmpty } from 'lodash/fp'
+import { getQuoteInfoByKey } from '@/store/reducers/quotes'
+
 type ItemCoinProps = {
   coinId: string
 }
 const ItemCoin = ({ coinId }: ItemCoinProps) => {
-  console.log('coinId', coinId)
   const coinInfo = useSelector(getCoinInfoByKey(coinId))
+  const quote = useSelector(getQuoteInfoByKey(coinId))
   return (
     <View>
       <Text>{coinInfo.symbol}</Text>
       <Text>{coinInfo.name}</Text>
-      <Text>{coinInfo.quote.USD.price}</Text>
-      <Text>{coinInfo.quote.USD.percent_change_1h}</Text>
+      <Text>{quote.USD.price}</Text>
+      <Text>{quote.USD.percent_change_1h}</Text>
     </View>
   )
 }
 
 const Layout = () => {
   const [getData, { isFetching }] = useLazyGetCoinListQuery()
+  const originalCoinList = useSelector(coinsListSelector(''))
+  useGetQuotesQuery(
+    { id: originalCoinList },
+    { pollingInterval: 30 * 1000, skip: isEmpty(originalCoinList), refetchOnReconnect: true, refetchOnFocus: true }
+  )
   const dispatch = useDispatch()
   const coinSize = useSelector(coinsSizeSelector)
   const [textSearch, updateTextSearch] = useState<string>('')
@@ -34,15 +41,14 @@ const Layout = () => {
     <View
       style={{
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
+        padding: 12
       }}
     >
       <SafeAreaView>
         <TextInput
           value={textSearch}
           onChangeText={updateTextSearch}
-          style={{ height: 40, margin: 12, borderWidth: 1, padding: 10 }}
+          style={{ height: 40, borderWidth: 1, padding: 10 }}
           clearButtonMode='while-editing'
         />
         <FlatList

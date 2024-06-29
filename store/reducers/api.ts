@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { CoinListResponse, CoinListQueryType } from '@/constants/type'
+import { CoinListResponse, CoinListQueryType, QuotesListRequestType, QuoteListResponse } from '@/constants/type'
 // Define a service using a base URL and expected endpoints
 export const baseapi = createApi({
   reducerPath: 'api',
@@ -13,8 +13,11 @@ export const baseapi = createApi({
   endpoints: (builder) => ({
     getCoinList: builder.query<CoinListResponse, CoinListQueryType>({
       query: (coinList) => ({ url: '/v1/cryptocurrency/listings/latest', params: { ...coinList } })
+    }),
+    getQuotes: builder.query<QuoteListResponse, QuotesListRequestType>({
+      query: (request) => ({ url: '/v2/cryptocurrency/quotes/latest', params: { id: request.id.join(',') } })
     })
   })
 })
 
-export const { useGetCoinListQuery, useLazyGetCoinListQuery } = baseapi
+export const { useGetCoinListQuery, useLazyGetCoinListQuery, useGetQuotesQuery } = baseapi

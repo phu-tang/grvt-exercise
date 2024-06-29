@@ -5,6 +5,10 @@ export type CoinListQueryType = {
   limit: number
 }
 
+export type QuotesListRequestType = {
+  id: string[]
+}
+
 export type ResponseStatusType = {
   timestamp: string
   error_code: number
@@ -36,12 +40,19 @@ export type CoinListResponse = {
   data: ResponseCoinType[]
 }
 
+export type QuoteListResponse = {
+  status: ResponseStatusType
+  data: {
+    [key: string]: ResponseCoinType
+  }
+}
+
 export type CoinStateType = {
   [key: string]: ResponseCoinType
 }
 
 export type QuoteStateStype = {
-  [key: string]: QuoteType
+  [key: string]: { USD: QuoteType }
 }
 
 export type RootState = ReturnType<typeof rootReducer>
