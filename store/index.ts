@@ -13,7 +13,7 @@ import { thunk } from 'redux-thunk'
 const persistConfig = {
   key: 'grvt',
   storage,
-  whitelist: []
+  whitelist: ['coins', 'quotes']
 }
 const persistedReducer = persistReducer<RootState, UnknownAction>(persistConfig, rootReducer)
 

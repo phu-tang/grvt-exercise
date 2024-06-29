@@ -20,4 +20,4 @@ export const baseapi = createApi({
   })
 })
 
-export const { useGetCoinListQuery, useLazyGetCoinListQuery, useGetQuotesQuery } = baseapi
+export const { useGetCoinListQuery, useLazyGetCoinListQuery, useGetQuotesQuery, useLazyGetQuotesQuery } = baseapi
