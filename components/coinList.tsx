@@ -5,19 +5,21 @@ import { FlashList } from '@shopify/flash-list'
 import { useLazyGetCoinListQuery, useLazyGetQuotesQuery } from '@/store/reducers/api'
 import { useDispatch, useSelector } from 'react-redux'
 import { coinsListSelector, coinsSizeSelector, reset } from '@/store/reducers/coinList'
-import { isEmpty, map, size } from 'lodash/fp'
+import { isEmpty, map, size, slice } from 'lodash/fp'
 import { debounce } from 'lodash'
 import ItemCoin from './coinItem'
 import { Color } from '@/constants/color'
+import { PAGE_SIZE } from '@/constants/type'
 
 const Layout = () => {
   const [getData, { data, isFetching }] = useLazyGetCoinListQuery()
-  const [viewItems, updateViewItems] = useState<string[]>([])
   const [getQuote] = useLazyGetQuotesQuery()
   const dispatch = useDispatch()
   const coinSize = useSelector(coinsSizeSelector)
   const [textSearch, updateTextSearch] = useState<string>('')
   const coinsList: string[] = useSelector(coinsListSelector(textSearch))
+  const [viewItems, updateViewItems] = useState<string[]>(slice(0, PAGE_SIZE, coinsList))
+
   const updateView = useCallback(
     debounce(({ viewableItems }) => {
       const item = map(({ item }) => item)(viewableItems)
@@ -26,10 +28,11 @@ const Layout = () => {
     []
   )
   useEffect(() => {
-    getData({ start: coinSize + 1, limit: 30 })
+    getData({ start: coinSize + 1, limit: PAGE_SIZE })
   }, [])
 
   useEffect(() => {
+    getQuote({ id: viewItems })
     const interval = setInterval(() => {
       getQuote({ id: viewItems })
     }, 60 * 1000)
@@ -68,7 +71,7 @@ const Layout = () => {
             if (!isEmpty(textSearch)) {
               return
             }
-            getData({ start: coinSize + 1, limit: 30 })
+            getData({ start: coinSize + 1, limit: PAGE_SIZE })
           }}
           onEndReachedThreshold={0.4}
           refreshControl={
@@ -82,7 +85,7 @@ const Layout = () => {
                   return
                 }
                 dispatch(reset())
-                getData({ start: 1, limit: 30 })
+                getData({ start: 1, limit: PAGE_SIZE })
               }}
             />
           }

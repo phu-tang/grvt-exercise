@@ -1,5 +1,7 @@
 import rootReducer from '@/store/reducers'
 
+export const PAGE_SIZE = 30
+
 export type CoinListQueryType = {
   start: number
   limit: number
